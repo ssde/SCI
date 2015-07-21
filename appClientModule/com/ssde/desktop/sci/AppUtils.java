@@ -1,7 +1,5 @@
 package com.ssde.desktop.sci;
 
-import java.io.File;
-
 import javax.swing.JDialog;
 
 import com.ssde.desktop.sci.db.CreateTables;
@@ -12,16 +10,20 @@ public class AppUtils {
 	
 	private InfoMessages dialog;
 	
+	public AppUtils() {
+		
+	}
+	
 	public void initializeDB() {
-//		System.out.println("Initializing database");
+//		//System.out.println("Initializing database");
 //		String DBPath = new File(SCI.class.getProtectionDomain().getCodeSource().getLocation().getPath()).getPath();
 //		String DBPath = getJarFolder();
 //		if(DBPath.contains("SCI.jar"))
 //			DBPath = DBPath.substring(0, DBPath.indexOf("SCI.jar"));
-//		System.out.println(DBPath);
+//		//System.out.println(DBPath);
 		CreateTables ct = new CreateTables("inventario.db");
 		ct.setTables();
-//		System.out.println("Database initialized");
+//		//System.out.println("Database initialized");
 
 	}
 	
@@ -32,25 +34,29 @@ public class AppUtils {
 		return item;
 	}
 	
-	public void applySalida(String code, int exist, int cant) {
+	public boolean applySalida(String code, int exist, int cant) {
 		Statements stmt = new Statements("inventario.db");
 		
 		if(exist<cant) {
 			infoMessage("La cantidad en existencia es\nmenor de la que se quiere sacar");
+			return false;
 		} else {
 			exist -= cant;
 			stmt.updateItemCant(code, exist);
 			if(exist<=getMinimo()){
-				infoMessage(getMessage());
+				infoMessage(getMessage()+"\n\nQuedan "+exist+" elementos en almacen");
+			} else {
+				infoMessage("Quedan "+exist+" elementos en almacen");
 			}
+			return true;
 		}
 	}
 	
 	public boolean verifyCode(String code) {
 		Item item = getItem(code);
 		
-		if(item.getID().equals(code)) {
-			infoMessage("El código ya existe en la base de datos");
+		if(item!=null) {
+			infoMessage("El código ya existe en la base de datos\n"+item.toString());
 			return false;
 		} else {
 			infoMessage("Código nuevo");
@@ -61,7 +67,7 @@ public class AppUtils {
 	public Item searchCode(String code) {
 		Item item = getItem(code);
 		
-		if(item.getID().equals("")) {
+		if(item == null) {
 			infoMessage("El código no existe en la base de datos");
 			return null;
 		}
@@ -74,9 +80,17 @@ public class AppUtils {
 		stmt.InsertItem(item);
 	}
 	
-	public void deleteItem(String code) {
+	public void updateItem(Item item) {
 		Statements stmt = new Statements("inventario.db");
-		stmt.deleteItem(code);
+		stmt.updateItem(item.getID(), item.getNombre(), item.getDescripcion(), item.getCantidad());
+	}
+	
+	public void deleteItem(String code, int exist) {
+		Statements stmt = new Statements("inventario.db");
+		if(exist==0)
+			stmt.deleteItem(code);
+		else
+			infoMessage("Todavía hay elementos en existencia");
 	}
 	
 	public int getMinimo() {

@@ -80,4 +80,8 @@ public class Item {
     public void setCantidad(int Cantidad) {
         this.Cantidad = Cantidad;
     }
+    
+    public String toString() {
+    	return "(id: "+getID()+", nombre: "+getNombre()+", descripcion: "+getDescripcion()+", cantidad: "+getCantidad()+")";
+    }
 }

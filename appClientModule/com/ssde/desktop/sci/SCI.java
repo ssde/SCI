@@ -83,10 +83,10 @@ public class SCI extends JFrame{
 		tabbedPane.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-//				System.out.println(tabbedPane.getSelectedIndex());
+//				//System.out.println(tabbedPane.getSelectedIndex());
 				if(tabbedPane.getSelectedIndex() == 4) {					
 					spnr_config_minimo.setValue(apputils.getMinimo());
-					
+					txt_config_desc.setText(apputils.getMessage());
 				}
 			}
 		});
@@ -169,7 +169,8 @@ public class SCI extends JFrame{
 		btn_egresos_apply.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				apputils.applySalida(fld_egresos_code.getText(), Integer.parseInt(fld_egresos_exist.getText()), Integer.parseInt(String.valueOf(spnr_egresos_cant.getValue())));
+				if(apputils.applySalida(fld_egresos_code.getText(), Integer.parseInt(fld_egresos_exist.getText()), Integer.parseInt(String.valueOf(spnr_egresos_cant.getValue()))))
+					resetFields();
 			}
 		});
 		btn_egresos_apply.setBounds(513, 376, 150, 40);
@@ -243,8 +244,9 @@ public class SCI extends JFrame{
 		btn_altas_apply.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				item = new Item(fld_altas_code.getText(), fld_altas_art.getText(), txt_altas_desc.getText(), (String)spnr_altas_cant.getValue());
+				item = new Item(fld_altas_code.getText(), fld_altas_art.getText(), txt_altas_desc.getText(), String.valueOf(spnr_altas_cant.getValue()));
 				apputils.saveItem(item);
+				resetFields();
 			}
 		});
 		altas.add(btn_altas_apply);
@@ -310,7 +312,8 @@ public class SCI extends JFrame{
 		btn_bajas_apply.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				apputils.deleteItem(fld_bajas_code.getText());
+				apputils.deleteItem(fld_bajas_code.getText(), Integer.parseInt(fld_bajas_exist.getText()));
+				resetFields();
 			}
 		});
 		btn_bajas_apply.setBounds(513, 376, 150, 40);
@@ -384,7 +387,8 @@ public class SCI extends JFrame{
 				if(item!=null) {
 					fld_cambios_art.setText(item.getNombre());
 					txt_cambios_desc.setText(item.getDescripcion());
-					spnr_cambios_cant.setValue(String.valueOf(item.getCantidad()));
+					spnr_cambios_cant.setValue(item.getCantidad());
+					spnr_cambios_cant.setEnabled(true);
 					btn_cambios_apply.setEnabled(true);
 				}
 			}
@@ -393,6 +397,14 @@ public class SCI extends JFrame{
 		cambios.add(btn_cambios_verify);
 		
 		btn_cambios_apply = new JButton("Actualizar");
+		btn_cambios_apply.addMouseListener(new MouseAdapter(){
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				item = new Item(fld_cambios_code.getText(), fld_cambios_art.getText(), txt_cambios_desc.getText(), String.valueOf(spnr_cambios_cant.getValue()));
+				apputils.updateItem(item);
+				resetFields();
+			}
+		});
 		btn_cambios_apply.setEnabled(false);
 		btn_cambios_apply.setBounds(513, 376, 150, 40);
 		cambios.add(btn_cambios_apply);
@@ -438,7 +450,38 @@ public class SCI extends JFrame{
 			}
 		});
 		btn_init_db.setBounds(401, 376, 125, 40);
-		config.add(btn_init_db);
+//		config.add(btn_init_db);
+	}
+	
+	private void resetFields() {
+		fld_egresos_code.setText("");
+		fld_egresos_art.setText("");
+		txt_egresos_desc.setText("");
+		fld_egresos_exist.setText("");
+		spnr_egresos_cant.setValue(0);
+		btn_egresos_apply.setEnabled(false);
+		fld_altas_code.setText("");
+		fld_altas_art.setText("");
+		fld_altas_art.setEditable(false);
+		txt_altas_desc.setText("");
+		txt_altas_desc.setEditable(false);
+		spnr_altas_cant.setValue(0);
+		spnr_altas_cant.setEnabled(false);
+		btn_altas_apply.setEnabled(false);
+		fld_bajas_code.setText("");
+		fld_bajas_art.setText("");
+		txt_bajas_desc.setText("");
+		fld_bajas_exist.setText("");
+		btn_bajas_apply.setEnabled(false);
+		fld_cambios_code.setText("");
+		fld_cambios_art.setText("");
+		fld_cambios_art.setEditable(false);
+		txt_cambios_desc.setText("");
+		txt_cambios_desc.setEditable(false);
+		spnr_cambios_cant.setValue(0);
+		spnr_cambios_cant.setEnabled(false);
+		btn_cambios_apply.setEnabled(false);
+
 	}
 	
 }

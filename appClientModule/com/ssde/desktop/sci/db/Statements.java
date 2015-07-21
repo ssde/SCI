@@ -39,7 +39,7 @@ public class Statements {
     
     public int getMinimo() {
     	int min = 0;
-    	String sql = "select * from minimos";
+    	String sql = "select * from minimos;";
         Connection conn = getConnector();
 
         try{
@@ -60,7 +60,7 @@ public class Statements {
     }
     
     public void saveMinimo(int min) {
-        String sql = "update minimos set min="+min+" where id = 1";
+        String sql = "update minimos set min="+min+" where id = 1;";
         Connection conn = getConnector();
 
         try{
@@ -79,7 +79,7 @@ public class Statements {
     
     public String getMessage() {
     	String message = "";
-    	String sql = "select * from messages";
+    	String sql = "select * from messages;";
         Connection conn = getConnector();
 
         try{
@@ -100,7 +100,7 @@ public class Statements {
     }
     
     public void saveMessage(String message) {
-        String sql = "update messages set message='"+message+"' where id = 1";
+        String sql = "update messages set message='"+message+"' where id = 1;";
         Connection conn = getConnector();
 
         try{
@@ -143,14 +143,17 @@ public class Statements {
     }
     
     public Item getItemById( String id ) {
-        String sql = "select * from items where id='"+id+"'";
-        Item temp = new Item();
+        String sql = "select * from items where id='"+id+"';";
+        //System.out.println(sql);
+        Item temp = null;
         Connection conn = getConnector();
 
         try{
             stmt = conn.createStatement();
             rs = stmt.executeQuery(sql);
             while( rs.next() ) {
+            	temp= new Item();
+            	System.out.println(rs.getString("id"));
                 temp.setID(rs.getString(1));
                 temp.setNombre(rs.getString(2));
                 temp.setDescripcion(rs.getString(3));
@@ -165,9 +168,15 @@ public class Statements {
         
         return temp;
     }
+//	if(rs.getString(1).equals("")){
+//		rs.close();
+//        stmt.close();
+//        closeConnection();   
+//        return null;
+//	}
     
     public void updateItemName(String id, String nombre) {
-        String sql = "update items set nombre='"+nombre+"' where id = '"+id+"'";
+        String sql = "update items set nombre='"+nombre+"' where id = '"+id+"';";
         Connection conn = getConnector();
 
         try{
@@ -183,7 +192,7 @@ public class Statements {
     }
     
     public void updateItemDesc(String id, String desc) {
-        String sql = "update items set desc='"+desc+"' where id = '"+id+"'";
+        String sql = "update items set desc='"+desc+"' where id = '"+id+"';";
         Connection conn = getConnector();
 
         try{
@@ -199,7 +208,7 @@ public class Statements {
     }
     
     public void updateItemCant(String id, int cant) {
-        String sql = "update items set cant="+cant+" where id = '"+id+"'";
+        String sql = "update items set cant="+cant+" where id = '"+id+"';";
         Connection conn = getConnector();
 
         try{
@@ -215,7 +224,7 @@ public class Statements {
     }
     
     public void updateItem(String id, String nombre, String desc, int cant) {
-    	String sql = "update items set nombre='"+nombre+"', desc='"+desc+"', cant="+cant+" where id = '"+id+"'";
+    	String sql = "update items set nombre='"+nombre+"', desc='"+desc+"', cant="+cant+" where id = '"+id+"';";
         Connection conn = getConnector();
 
         try{
@@ -228,10 +237,12 @@ public class Statements {
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
         }
+        infoMessage("Elemento actualizado");
     }
     
     public void InsertItem(Item item) {
-    	String sql = "insert into items (id,nombre,desc,cant) values("+item.getID()+","+item.getNombre()+","+item.getDescripcion()+","+item.getCantidad()+")";
+    	String sql = "insert into items (id,nombre,desc,cant) values('"+item.getID()+"','"+item.getNombre()+"','"+item.getDescripcion()+"',"+item.getCantidad()+");";
+    	//System.out.println(sql);
         Connection conn = getConnector();
 
         try{
@@ -250,7 +261,7 @@ public class Statements {
     }
     
     public void deleteItem(String id) {
-        String sql = "delete from items where id = '"+id+"'";
+        String sql = "delete from items where id = '"+id+"';";
         Connection conn = getConnector();
 
         try{

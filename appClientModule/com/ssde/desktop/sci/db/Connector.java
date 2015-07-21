@@ -24,8 +24,8 @@ public class Connector {
     }
     
     public Connection getConnection() {
-//    	System.out.println("forName: "+forName);
-//    	System.out.println("db: "+db);
+//    	//System.out.println("forName: "+forName);
+//    	//System.out.println("db: "+db);
 
     	try{
     		if(c==null) {
