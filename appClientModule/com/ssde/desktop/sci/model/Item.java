@@ -14,16 +14,18 @@ public class Item {
     private String Nombre;
     private String Descripcion;
     private int Cantidad;
+    private double precio;
     
     public Item() {
     	
     }
 
-    public Item(String id, String name, String desc, String cant) {
+    public Item(String id, String name, String desc, String cant, String precio) throws NumberFormatException{
     	setID(id);
     	setNombre(name);
     	setDescripcion(desc);
     	setCantidad(Integer.parseInt(cant));
+    	setPrecio(Double.parseDouble(precio));
     }
     /**
      * @return the ID
@@ -84,4 +86,12 @@ public class Item {
     public String toString() {
     	return "(id: "+getID()+", nombre: "+getNombre()+", descripcion: "+getDescripcion()+", cantidad: "+getCantidad()+")";
     }
+
+	public double getPrecio() {
+		return precio;
+	}
+
+	public void setPrecio(double precio) {
+		this.precio = precio;
+	}
 }

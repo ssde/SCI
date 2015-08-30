@@ -1,5 +1,8 @@
 package com.ssde.desktop.sci;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import javax.swing.JDialog;
 
 import com.ssde.desktop.sci.db.CreateTables;
@@ -34,32 +37,116 @@ public class AppUtils {
 		return item;
 	}
 	
+	public String round(double value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+
+	    BigDecimal bd = new BigDecimal(value);
+	    bd = bd.setScale(places, RoundingMode.HALF_UP);
+	    
+	    return String.valueOf(bd.doubleValue());
+	}
+	
+	public String addItemToSelected(String text, Item item, int salidas) {
+//		return createTableRow(String.valueOf(salidas), item.getNombre(), "$"+round(item.getPrecio()*salidas, 2));
+		return createTable(text, String.valueOf(salidas), item.getNombre(), String.valueOf(item.getPrecio()), "$"+round(item.getPrecio()*salidas, 2));
+	}
+	
+	private String createTableRow(String col1, String col2, String col3, String col4) {
+		String row = "<tr style=\"text-align: center;font-family:Verdana;font-size:12pt;\" >";
+		
+		row += "<td width=\"10%\">"+col1+"</td>";
+		row += "<td width=\"60%\">"+col2+"</td>";
+		row += "<td width=\"15%\">"+col3+"</td>";
+		row += "<td width=\"15%\">"+col4+"</td>";
+		row += "</tr>";
+		
+		return row;
+	}
+	
+	private String createTable(String currentable, String col1, String col2, String col3, String col4) {
+		if(currentable.equals("")){
+			currentable = "<table width=\"390px\"></table>";
+		}
+		String table = currentable.replace("</table>", "");
+		
+		table += createTableRow(col1, col2, col3, col4);
+		table += "</table>";
+//		System.out.println(table);
+		return table;
+	}
+	
 	public boolean applySalida(String code, int exist, int cant) {
 		Statements stmt = new Statements("inventario.db");
 		
-		if(exist<cant) {
-			infoMessage("La cantidad en existencia es\nmenor de la que se quiere sacar");
-			return false;
-		} else {
-			exist -= cant;
-			stmt.updateItemCant(code, exist);
-			if(exist<=getMinimo()){
-				infoMessage(getMessage()+"\n\nQuedan "+exist+" elementos en almacen");
-			} else {
-				infoMessage("Quedan "+exist+" elementos en almacen");
-			}
-			return true;
+		exist -= cant;
+		stmt.updateItemCant(code, exist);
+//		if(exist<=getMinimo()){
+//			infoMessage(getMessage()+"\n\nQuedan "+exist+" elementos en almacen");
+//		} 
+		
+		return true;
+	}
+	
+	public boolean comparePasswords(char [] password){
+		String pass = "";
+		Statements stmt = new Statements("inventario.db");
+		
+		for(char c : password) {
+			pass += c;
 		}
+		
+		return stmt.isEqual(pass);
+//		if(stmt.isEqual(pass))
+//			return true;
+//		else
+//			infoMessage("Contraseña incorrecta");
+//		
+//		return false;
+	}
+	
+	public boolean comparePasswords(char [] psswd1, char [] psswd2){
+		String pass1 = "";
+		String pass2 = "";
+		
+//		System.out.println("Psswd1: "+psswd1+"\nPsswd2"+psswd2);
+		
+		
+		for(char c : psswd1) {
+			pass1 += c;
+		}
+		for(char c : psswd2) {
+			pass2 += c;
+		}
+		
+//		System.out.println("Strings:\n1->"+pass1+"\n2->"+pass2);
+		
+		if(pass1.equals(pass2))
+			return true;
+//		else
+//			infoMessage("Las contraseñas no coinciden");
+		
+		return false;
+	}
+	
+	public void updatePassword(char[] password) {
+		String pass = "";
+		Statements stmt = new Statements("inventario.db");
+		
+		for(char c : password) {
+			pass += c;
+		}
+		
+		stmt.updatePassword(pass);
 	}
 	
 	public boolean verifyCode(String code) {
 		Item item = getItem(code);
 		
 		if(item!=null) {
-			infoMessage("El código ya existe en la base de datos\n"+item.toString());
+//			infoMessage("El código ya existe en la base de datos\n");
 			return false;
 		} else {
-			infoMessage("Código nuevo");
+//			infoMessage("Código nuevo");
 			return true;
 		}
 	}
@@ -68,7 +155,7 @@ public class AppUtils {
 		Item item = getItem(code);
 		
 		if(item == null) {
-			infoMessage("El código no existe en la base de datos");
+//			infoMessage("El código no existe en la base de datos");
 			return null;
 		}
 		
@@ -80,17 +167,27 @@ public class AppUtils {
 		stmt.InsertItem(item);
 	}
 	
-	public void updateItem(Item item) {
+	public void updateItem(Item item, String cant) {
 		Statements stmt = new Statements("inventario.db");
-		stmt.updateItem(item.getID(), item.getNombre(), item.getDescripcion(), item.getCantidad());
+		int total=0;
+		int cnt = Integer.parseInt(cant);
+		if(cnt<0)
+			total = item.getCantidad()-cnt;
+		else
+			total = item.getCantidad()+cnt;
+		
+		stmt.updateItem(item.getID(), item.getNombre(), item.getDescripcion(), total, item.getPrecio());
 	}
 	
-	public void deleteItem(String code, int exist) {
+	public boolean deleteItem(String code, int exist) {
 		Statements stmt = new Statements("inventario.db");
-		if(exist==0)
-			stmt.deleteItem(code);
-		else
-			infoMessage("Todavía hay elementos en existencia");
+		
+		if(exist>0) {
+			return false;//infoMessage("Todavía hay elementos en existencia");
+		}
+		
+		stmt.deleteItem(code);
+		return true;
 	}
 	
 	public int getMinimo() {

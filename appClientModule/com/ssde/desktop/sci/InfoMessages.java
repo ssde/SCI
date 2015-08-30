@@ -17,7 +17,7 @@ public class InfoMessages extends JDialog {
 
 	private final JPanel contentPanel = new JPanel();
 	private JLabel lbl_message;
-	private final String html1 = "<html><body style='width: 250px; align-text: center;'>";
+	private final String html1 = "<html><body style='width: 250px; text-align: center;'>";
 	private final String html2 = "</body></html>";
 
 	/**

@@ -50,10 +50,12 @@ public class Statements {
             }
             rs.close();
             stmt.close();
-            closeConnection();           
+//            closeConnection();           
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
-            return 0;
+            min = 0;
+        } finally {
+        	closeConnection();
         }
         
         return min;        
@@ -69,12 +71,13 @@ public class Statements {
             conn.commit();
             
             stmt.close();
-            closeConnection();            
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();
         }
         
-        infoMessage("Minimo guardado");
+//        infoMessage("Minimo guardado");
     }
     
     public String getMessage() {
@@ -93,10 +96,10 @@ public class Statements {
             closeConnection();           
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
-            return "";
-        }
-        
-        return message;        
+        } finally {
+            closeConnection();           
+        }        
+        return message;
     }
     
     public void saveMessage(String message) {
@@ -109,11 +112,12 @@ public class Statements {
             conn.commit();
             
             stmt.close();
-            closeConnection();            
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();            
         }
-        infoMessage("Mensaje guardado");
+//        infoMessage("Mensaje guardado");
     }
 
     public List<Item> getAllItems() {
@@ -134,9 +138,11 @@ public class Statements {
             }
             rs.close();
             stmt.close();
-            closeConnection();           
+//            closeConnection();           
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();           
         }
         
         return result;
@@ -153,17 +159,19 @@ public class Statements {
             rs = stmt.executeQuery(sql);
             while( rs.next() ) {
             	temp= new Item();
-            	System.out.println(rs.getString("id"));
+//            	System.out.println(rs.getString("id"));
                 temp.setID(rs.getString(1));
                 temp.setNombre(rs.getString(2));
                 temp.setDescripcion(rs.getString(3));
                 temp.setCantidad(rs.getInt(4));
+                temp.setPrecio(rs.getDouble(5));
             }
             rs.close();
             stmt.close();
-            closeConnection();           
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();           
         }
         
         return temp;
@@ -188,6 +196,8 @@ public class Statements {
             closeConnection();            
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();            
         }
     }
     
@@ -204,6 +214,8 @@ public class Statements {
             closeConnection();            
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();            
         }
     }
     
@@ -220,11 +232,13 @@ public class Statements {
             closeConnection();            
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();            
         }
     }
     
-    public void updateItem(String id, String nombre, String desc, int cant) {
-    	String sql = "update items set nombre='"+nombre+"', desc='"+desc+"', cant="+cant+" where id = '"+id+"';";
+    public void updateItem(String id, String nombre, String desc, int cant, double precio) {
+    	String sql = "update items set nombre='"+nombre+"', desc='"+desc+"', cant="+cant+", precio="+precio+" where id = '"+id+"';";
         Connection conn = getConnector();
 
         try{
@@ -236,12 +250,14 @@ public class Statements {
             closeConnection();            
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();            
         }
-        infoMessage("Elemento actualizado");
+//        infoMessage("Elemento actualizado");
     }
     
     public void InsertItem(Item item) {
-    	String sql = "insert into items (id,nombre,desc,cant) values('"+item.getID()+"','"+item.getNombre()+"','"+item.getDescripcion()+"',"+item.getCantidad()+");";
+    	String sql = "insert into items (id,nombre,desc,cant,precio) values('"+item.getID()+"','"+item.getNombre()+"','"+item.getDescripcion()+"',"+item.getCantidad()+","+item.getPrecio()+");";
     	//System.out.println(sql);
         Connection conn = getConnector();
 
@@ -255,9 +271,11 @@ public class Statements {
         } catch (Exception e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
             infoMessage("El código ya existe en la base de datos");
+        } finally {
+            closeConnection();            
         }
         
-		infoMessage("Elemento guardado");
+//		infoMessage("Elemento guardado");
     }
     
     public void deleteItem(String id) {
@@ -274,9 +292,61 @@ public class Statements {
         } catch (Exception e) {
         	infoMessage("Error al borrar el registro");
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();            
         }
         
-		infoMessage("Elemento borrado");
+//		infoMessage("Elemento borrado");
+    }
+    
+    public boolean isEqual(String password) {
+    	String sql = "select * from contrasena where pass='"+password+"'";
+    	String res = "";
+        Connection conn = getConnector();
+        
+//        System.out.println(sql);
+
+        try{
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(sql);
+            while( rs.next() ) {
+//            	System.out.println(rs.getString(2));
+                res = rs.getString(2);
+            }
+            rs.close();
+            stmt.close();
+//            closeConnection();           
+        } catch (Exception e) {
+//        	closeConnection();
+            System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+        } finally {
+            closeConnection();            
+        }
+        
+        if(res.equals(password))
+        	return true;
+        
+        return false;
+    }
+    
+    public void updatePassword(String pass) {
+    	String sql = "update contrasena set pass='"+pass+"' where id = 1";
+    	
+        Connection conn = getConnector();
+
+        try{
+            stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+            conn.commit();
+            
+            stmt.close();
+            infoMessage("Contraseña actualizada");
+        } catch (Exception e) {
+            System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+            infoMessage("Hubo un error al actualizar la contraseña");
+        } finally {
+            closeConnection();
+        }
     }
     
 	public void infoMessage(String message) {
