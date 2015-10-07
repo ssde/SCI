@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -34,6 +35,7 @@ import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 
 import com.ssde.desktop.sci.model.Item;
+import com.ssde.desktop.sci.model.Provider;
 import com.ssde.desktop.sci.pdf.Receits;
 
 @SuppressWarnings("serial")
@@ -47,11 +49,13 @@ public class SCI extends JFrame{
 	private List<Item> ventaActual;
 	private List<Integer> ventaSalidas;
 	
-	//Private fields
+	//Private fieldsg
+	private static		JFrame ProvidersDialog;
 	private JPanel 		contentPane;
 	private JPanel 		altas;
 	private JPanel 		bajas;
 	private JPanel 		cambios;
+	private JPanel		reportes;
 	private JTabbedPane tabbedPane;
 	private JTextField 	fld_egresos_code;
 	private JTextField 	fld_egresos_art;
@@ -67,6 +71,10 @@ public class SCI extends JFrame{
 	private JTextField 	fld_altas_code;
 	private JTextField 	fld_altas_art;
 	private JTextPane 	txt_altas_desc;
+	private JButton 	btn_altas_proveedor;
+	private JButton 	btn_cambios_proveedor;
+	private JComboBox 	sel_altas_proveedor;
+	private JComboBox 	sel_cambios_proveedor;
 	private JSpinner 	spnr_altas_cant;
 	private JTextField	fld_altas_precio;
 	private JButton 	btn_altas_verify;
@@ -101,6 +109,7 @@ public class SCI extends JFrame{
 	private JButton 	btn_config_psswd;
 	private JLabel 		lbl_config_psswd_match;
 	private JLabel 		lbl_config_info_messages;
+	private JLabel		lbl_reportes_info_messages;
 	private SpinnerModel spinnermodel;
 	private AppUtils 	apputils;
 	private Item 		globalitem;
@@ -115,6 +124,8 @@ public class SCI extends JFrame{
 				try {
 					SCI frame = new SCI();
 					frame.setVisible(true);
+					
+					ProvidersDialog = new Providers();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -132,6 +143,7 @@ public class SCI extends JFrame{
 		apputils = new AppUtils();
 		spinnermodel = new SpinnerNumberModel(0,0,10000,1); //init,min,max,step
 		
+	    setTitle("Sistema de Control de Inventario, SSDE");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 700, 700);
 		contentPane = new JPanel();
@@ -496,16 +508,46 @@ public class SCI extends JFrame{
 		txt_altas_desc.setForeground(defaultColor);
 		altas.add(txt_altas_desc);
 		
-		JLabel lbl_altas_exist = new JLabel("Existencias:");
+	    JLabel lbl_altas_proveedor = new JLabel("Proveedor");
+	    lbl_altas_proveedor.setHorizontalAlignment(4);
+	    lbl_altas_proveedor.setBounds(40, 292, 150, 16);
+	    lbl_altas_proveedor.setFont(this.defaultFont);
+	    lbl_altas_proveedor.setForeground(this.defaultColor);
+	    altas.add(lbl_altas_proveedor);
+	    
+	    sel_altas_proveedor = new JComboBox();
+	    sel_altas_proveedor.setBounds(250, 280, 250, 40);
+	    sel_altas_proveedor.setFont(this.defaultFont);
+	    sel_altas_proveedor.setForeground(this.defaultColor);
+	    sel_altas_proveedor.setEditable(false);
+	    sel_altas_proveedor.setEnabled(false);
+	    altas.add(sel_altas_proveedor);
+	    
+	    btn_altas_proveedor = new JButton("+");
+	    btn_altas_proveedor.setEnabled(false);
+	    btn_altas_proveedor.setBounds(500, 286, 50, 30);
+	    btn_altas_proveedor.setFont(this.defaultFont);
+	    btn_altas_proveedor.setForeground(this.defaultColor);
+	    btn_altas_proveedor.addMouseListener(new MouseAdapter() {
+	    	public void mouseClicked(MouseEvent e) {
+	    		if(btn_altas_proveedor.isEnabled()) {
+		    		ProvidersDialog.setVisible(true);
+		    		clearFields();
+	    		}
+	    	}
+	    });
+	    altas.add(btn_altas_proveedor);
+	    
+	    JLabel lbl_altas_exist = new JLabel("Existencias:");
 		lbl_altas_exist.setHorizontalAlignment(SwingConstants.RIGHT);
-		lbl_altas_exist.setBounds(40, 292, 150, 16);
+		lbl_altas_exist.setBounds(40, 342, 150, 16);
 		lbl_altas_exist.setFont(defaultFont);
 		lbl_altas_exist.setForeground(defaultColor);
 		altas.add(lbl_altas_exist);
 		
 		spnr_altas_cant = new JSpinner(spinnermodel);
 		spnr_altas_cant.setEnabled(false);
-		spnr_altas_cant.setBounds(250, 280, 100, 40);
+		spnr_altas_cant.setBounds(250, 330, 100, 40);
 		spnr_altas_cant.setFont(defaultFont);
 		spnr_altas_cant.setForeground(defaultColor);
 		altas.add(spnr_altas_cant);
@@ -525,6 +567,10 @@ public class SCI extends JFrame{
 						spnr_altas_cant.setEnabled(true);
 						fld_altas_precio.setEditable(true);
 						btn_altas_apply.setEnabled(true);
+						btn_altas_proveedor.setEnabled(true);
+//						sel_altas_proveedor.setEditable(true);
+						sel_altas_proveedor.setEnabled(true);
+						populateProviderSelector();
 					} else {
 						lbl_altas_info_messages.setText("El código ya existe en la base de datos");
 					}
@@ -536,19 +582,22 @@ public class SCI extends JFrame{
 		
 		btn_altas_apply = new JButton("Guardar");
 		btn_altas_apply.setEnabled(false);
-		btn_altas_apply.setBounds(400, 385, 150, 40);
+		btn_altas_apply.setBounds(400, 435, 150, 40);
 		btn_altas_apply.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if(!fld_altas_code.getText().equals("")) {
 					String precio = NumUtils.makeToDouble(fld_altas_precio.getText());
+					String tmp = String.valueOf(sel_altas_proveedor.getSelectedItem());
 					if(precio.equals("0") || precio.contains("-")){
 //						infoMessage("El precio introducido no es válido");
 						lbl_altas_info_messages.setText("El precio introducido no es válido");
 						fld_altas_precio.setText(precio);
+					} else if(tmp.equals("Seleccione un proveedor")) {
+						lbl_altas_info_messages.setText("Elija un proveedor de la lista");
 					} else {
 						try {
-							globalitem = new Item(fld_altas_code.getText(), fld_altas_art.getText(), txt_altas_desc.getText(), String.valueOf(spnr_altas_cant.getValue()), fld_altas_precio.getText());
+							globalitem = new Item(fld_altas_code.getText(), fld_altas_art.getText(), txt_altas_desc.getText(), String.valueOf(spnr_altas_cant.getValue()), fld_altas_precio.getText(), tmp);
 							apputils.saveItem(globalitem);
 							lbl_altas_info_messages.setText("Elemento guardado");
 							clearFields();
@@ -557,6 +606,7 @@ public class SCI extends JFrame{
 							fld_altas_precio.setText(precio);
 						} catch (Exception ex1) {
 							lbl_altas_info_messages.setText("Ocurrió un error. El elemento no fue guardado");
+							System.out.println(ex1.getClass().getName()+": "+ex1.getMessage());
 						}
 					}
 				}
@@ -567,7 +617,7 @@ public class SCI extends JFrame{
 		altas.add(btn_altas_apply);
 		
 		JButton btn_altas_cancel = new JButton("Cancelar");
-		btn_altas_cancel.setBounds(100, 385, 150, 40);
+		btn_altas_cancel.setBounds(100, 435, 150, 40);
 		btn_altas_cancel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -578,7 +628,7 @@ public class SCI extends JFrame{
 		
 		JLabel lblPrecio = new JLabel("Precio:");
 		lblPrecio.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblPrecio.setBounds(40, 342, 150, 16);
+		lblPrecio.setBounds(40, 392, 150, 16);
 		lblPrecio.setFont(defaultFont);
 		lblPrecio.setForeground(defaultColor);
 		altas.add(lblPrecio);
@@ -586,7 +636,7 @@ public class SCI extends JFrame{
 		fld_altas_precio = new JTextField();
 		fld_altas_precio.setEditable(false);
 		fld_altas_precio.setColumns(150);
-		fld_altas_precio.setBounds(250, 330, 300, 40);
+		fld_altas_precio.setBounds(250, 380, 300, 40);
 		fld_altas_precio.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -877,15 +927,45 @@ public class SCI extends JFrame{
 		txt_cambios_desc.setForeground(defaultColor);
 		cambios.add(txt_cambios_desc);
 		
-		JLabel lbl_cambios_exist = new JLabel("Existencias:");
+	    JLabel lbl_cambios_proveedor = new JLabel("Proveedor");
+	    lbl_cambios_proveedor.setHorizontalAlignment(4);
+	    lbl_cambios_proveedor.setBounds(40, 292, 150, 16);
+	    lbl_cambios_proveedor.setFont(this.defaultFont);
+	    lbl_cambios_proveedor.setForeground(this.defaultColor);
+	    cambios.add(lbl_cambios_proveedor);
+	    
+	    sel_cambios_proveedor = new JComboBox();
+	    sel_cambios_proveedor.setBounds(250, 280, 250, 40);
+	    sel_cambios_proveedor.setFont(this.defaultFont);
+	    sel_cambios_proveedor.setForeground(this.defaultColor);
+	    sel_cambios_proveedor.setEditable(false);
+	    sel_cambios_proveedor.setEnabled(false);
+	    cambios.add(sel_cambios_proveedor);
+	    
+	    btn_cambios_proveedor = new JButton("+");
+	    btn_cambios_proveedor.setEnabled(false);
+	    btn_cambios_proveedor.setBounds(500, 286, 50, 30);
+	    btn_cambios_proveedor.setFont(this.defaultFont);
+	    btn_cambios_proveedor.setForeground(this.defaultColor);
+	    btn_cambios_proveedor.addMouseListener(new MouseAdapter() {
+	    	public void mouseClicked(MouseEvent e) {
+	    		if(btn_cambios_proveedor.isEnabled()) {
+		    		ProvidersDialog.setVisible(true);
+		    		clearFields();
+	    		}
+	    	}
+	    });
+	    cambios.add(btn_cambios_proveedor);
+
+	    JLabel lbl_cambios_exist = new JLabel("Existencias:");
 		lbl_cambios_exist.setHorizontalAlignment(SwingConstants.RIGHT);
-		lbl_cambios_exist.setBounds(40, 292, 150, 16);
+		lbl_cambios_exist.setBounds(40, 342, 150, 16);
 		lbl_cambios_exist.setFont(defaultFont);
 		lbl_cambios_exist.setForeground(defaultColor);
 		cambios.add(lbl_cambios_exist);
 		
 		fld_cambios_exist = new JTextField();
-		fld_cambios_exist.setBounds(250, 280, 100, 40);
+		fld_cambios_exist.setBounds(250, 330, 100, 40);
 		fld_cambios_exist.setEditable(false);
 		fld_cambios_exist.setFont(defaultFont);
 		fld_cambios_exist.setForeground(defaultColor);
@@ -893,14 +973,14 @@ public class SCI extends JFrame{
 		
 		JLabel lbl_cambios_cant = new JLabel("Agregar:");
 		lbl_cambios_cant.setHorizontalAlignment(SwingConstants.RIGHT);
-		lbl_cambios_cant.setBounds(370, 292, 100, 16);
+		lbl_cambios_cant.setBounds(370, 342, 100, 16);
 		lbl_cambios_cant.setFont(defaultFont);
 		lbl_cambios_cant.setForeground(defaultColor);
 		cambios.add(lbl_cambios_cant);
 		
 		spnr_cambios_cant = new JSpinner(spinnermodel);
 		spnr_cambios_cant.setEnabled(false);
-		spnr_cambios_cant.setBounds(490, 280, 70, 40);
+		spnr_cambios_cant.setBounds(490, 330, 70, 40);
 		spnr_cambios_cant.setFont(defaultFont);
 		spnr_cambios_cant.setForeground(defaultColor);
 		cambios.add(spnr_cambios_cant);
@@ -913,17 +993,22 @@ public class SCI extends JFrame{
 				if(btn_cambios_verify.isEnabled()) {
 					Item item = apputils.searchCode(fld_cambios_code.getText());
 					if(item!=null && btn_cambios_verify.isEnabled()) {
+						populateProviderSelector();
 						fld_cambios_art.setText(item.getNombre());
 						txt_cambios_desc.setText(item.getDescripcion());
 						fld_cambios_exist.setText(String.valueOf(item.getCantidad()));
 						spnr_cambios_cant.setValue(0);
 						fld_cambios_precio.setText(String.valueOf(item.getPrecio()));
+						sel_cambios_proveedor.setSelectedItem(item.getProveedor());
 						fld_cambios_code.setEditable(false);
 						fld_cambios_art.setEditable(true);
 						txt_cambios_desc.setEditable(true);
 						spnr_cambios_cant.setEnabled(true);
 						fld_cambios_precio.setEditable(true);
 						btn_cambios_apply.setEnabled(true);
+						btn_cambios_proveedor.setEnabled(true);
+//						sel_cambios_proveedor.setEditable(true);
+						sel_cambios_proveedor.setEnabled(true);
 					} else if(item==null) {
 						lbl_cambios_info_messages.setText("Elcódigo no existe en la base de datos");
 					}
@@ -941,12 +1026,15 @@ public class SCI extends JFrame{
 			public void mouseClicked(MouseEvent e) {
 				if(btn_cambios_verify.isEnabled()) {
 					String precio = NumUtils.makeToDouble(fld_cambios_precio.getText());
+					String tmp = String.valueOf(sel_cambios_proveedor.getSelectedItem());
 					if(precio.equals("0")||precio.contains("-")) {
 						lbl_cambios_info_messages.setText("El precio introducido no es válido");
 						fld_cambios_precio.setText(precio);
+					} else if(tmp.equals("Seleccione un proveedor")) {
+						lbl_cambios_info_messages.setText("Elija un proveedor de la lista");
 					} else {
 						try {
-							globalitem = new Item(fld_altas_code.getText(), fld_altas_art.getText(), txt_altas_desc.getText(), String.valueOf(spnr_altas_cant.getValue()), fld_altas_precio.getText());
+							globalitem = new Item(fld_cambios_code.getText(), fld_cambios_art.getText(), txt_cambios_desc.getText(), String.valueOf(spnr_cambios_cant.getValue()), fld_cambios_precio.getText(), tmp);
 							apputils.updateItem(globalitem,fld_cambios_exist.getText());
 							lbl_cambios_info_messages.setText("Articulo actualizado");
 							clearFields();
@@ -961,13 +1049,13 @@ public class SCI extends JFrame{
 			}
 		});
 		btn_cambios_apply.setEnabled(false);
-		btn_cambios_apply.setBounds(400, 385, 150, 40);
+		btn_cambios_apply.setBounds(400, 435, 150, 40);
 		btn_cambios_apply.setFont(defaultFont);
 		btn_cambios_apply.setForeground(defaultColor);
 		cambios.add(btn_cambios_apply);
 		
 		JButton btn_cambios_cancel = new JButton("Cancelar");
-		btn_cambios_cancel.setBounds(100, 385, 150, 40);
+		btn_cambios_cancel.setBounds(100, 435, 150, 40);
 		btn_cambios_cancel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -978,7 +1066,7 @@ public class SCI extends JFrame{
 
 		fld_cambios_precio = new JTextField();
 		fld_cambios_precio.setEditable(false);
-		fld_cambios_precio.setBounds(250, 330, 200, 40);
+		fld_cambios_precio.setBounds(250, 380, 200, 40);
 		fld_cambios_precio.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -991,7 +1079,7 @@ public class SCI extends JFrame{
 		
 		JLabel lblPrecio_1 = new JLabel("Precio:");
 		lblPrecio_1.setHorizontalAlignment(SwingConstants.RIGHT);
-		lblPrecio_1.setBounds(129, 342, 61, 16);
+		lblPrecio_1.setBounds(129, 392, 61, 16);
 		lblPrecio_1.setFont(defaultFont);
 		lblPrecio_1.setForeground(defaultColor);
 		cambios.add(lblPrecio_1);
@@ -1033,6 +1121,8 @@ public class SCI extends JFrame{
 		lbl_cambios_info_messages = new JLabel("");
 		lbl_cambios_info_messages.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl_cambios_info_messages.setBounds(5, 595, 658, 20);
+		lbl_cambios_info_messages.setFont(messageFont);
+		lbl_cambios_info_messages.setForeground(messageColor);
 		cambios.add(lbl_cambios_info_messages);
 
 		/*
@@ -1228,12 +1318,78 @@ public class SCI extends JFrame{
 		lbl_config_info_messages.setFont(messageFont);
 		lbl_config_info_messages.setForeground(messageColor);
 		config.add(lbl_config_info_messages);
+		
+		/*
+		 * Panel de reportes
+		 */
+	    reportes = new customJPanel();
+	    tabbedPane.addTab("Reportes", null, this.reportes, null);
+	    reportes.setLayout(null);
+	    
+	    JButton btn_reportes_proveedores = new JButton("Proveedores");
+	    btn_reportes_proveedores.setBounds(250, 100, 200, 40);
+	    btn_reportes_proveedores.setFont(defaultFont);
+	    btn_reportes_proveedores.setForeground(defaultColor);
+	    btn_reportes_proveedores.addMouseListener(new MouseAdapter() {
+	    	public void mouseClicked(MouseEvent e) {
+	    		apputils.PDFReporteProveedores();
+	    		lbl_reportes_info_messages.setText("El reporte fue generado, revise el folder de reportes de Proveedores");
+	    	}
+	    });
+	    this.reportes.add(btn_reportes_proveedores);
+	    
+	    JButton btn_reportes_productos = new JButton("Productos");
+	    btn_reportes_productos.setBounds(250, 200, 200, 40);
+	    btn_reportes_productos.setFont(defaultFont);
+	    btn_reportes_productos.setForeground(defaultColor);
+	    btn_reportes_productos.addMouseListener(new MouseAdapter() {
+	    	public void mouseClicked(MouseEvent e) {
+		        apputils.PDFReporteProductos();
+		        lbl_reportes_info_messages.setText("El reporte fue generado, revise el folder de reportes de Productos");
+	    	}
+	    });
+	    this.reportes.add(btn_reportes_productos);
+	    
+	    JButton btn_reportes_add_proveedor = new JButton("Agregar Proveedores");
+	    btn_reportes_add_proveedor.setBounds(250, 300, 200, 40);
+	    btn_reportes_add_proveedor.setFont(defaultFont);
+	    btn_reportes_add_proveedor.setForeground(defaultColor);
+	    btn_reportes_add_proveedor.addMouseListener(new MouseAdapter() {
+	    	public void mouseClicked(MouseEvent e) {
+		        ProvidersDialog.setVisible(true);
+		        lbl_reportes_info_messages.setText("");
+	    	}
+	    });
+	    this.reportes.add(btn_reportes_add_proveedor);
+	    
+	    lbl_reportes_info_messages = new JLabel("");
+	    lbl_reportes_info_messages.setHorizontalAlignment(0);
+	    lbl_reportes_info_messages.setBounds(5, 595, 658, 20);
+	    lbl_reportes_info_messages.setFont(messageFont);
+	    lbl_reportes_info_messages.setForeground(messageColor);
+	    reportes.add(lbl_reportes_info_messages);
 	}
-	
-	
+	  
 	/*
 	 * Private methods
 	 */
+	private void populateProviderSelector() {
+		sel_altas_proveedor.removeAllItems();
+		sel_cambios_proveedor.removeAllItems();
+    	sel_altas_proveedor.addItem("Seleccione un proveedor");
+    	sel_cambios_proveedor.addItem("Seleccione un proveedor");
+		
+	    List<Provider> list = apputils.getProviders();
+	    for (Provider p : list) {
+	    	sel_altas_proveedor.addItem(p);
+	    	sel_cambios_proveedor.addItem(p);
+	    }
+	}
+	  
+//	private void setSelected(Provider p) {
+//		sel_cambios_proveedor.setSelectedItem(p);
+//	}	
+	
 	private void nuevaVenta() {
 		fld_egresos_code.setText("");
 		fld_egresos_art.setText("");
@@ -1253,6 +1409,8 @@ public class SCI extends JFrame{
 		txt_altas_desc.setEditable(false);
 		spnr_altas_cant.setValue(0);
 		spnr_altas_cant.setEnabled(false);
+		sel_altas_proveedor.setEditable(false);
+		btn_altas_proveedor.setEnabled(false);
 		fld_altas_precio.setText("");
 		fld_altas_precio.setEditable(false);
 		btn_altas_verify.setEnabled(false);
@@ -1279,7 +1437,11 @@ public class SCI extends JFrame{
 		fld_cambios_precio.setEditable(false);
 		spnr_cambios_cant.setValue(0);
 		spnr_cambios_cant.setEnabled(false);
+		sel_cambios_proveedor.setEditable(false);
+		btn_cambios_proveedor.setEnabled(false);
 		btn_cambios_apply.setEnabled(false);
+		sel_cambios_proveedor.removeAllItems();
+		sel_altas_proveedor.removeAllItems();
 //		lbl_altas_info_messages.setText("");
 //		lbl_bajas_info_messages.setText("");
 //		lbl_cambios_info_messages.setText("");
@@ -1295,6 +1457,7 @@ public class SCI extends JFrame{
 		txt_altas_desc.setEditable(false);
 		spnr_altas_cant.setValue(0);
 		spnr_altas_cant.setEnabled(false);
+		sel_altas_proveedor.setEditable(false);
 		fld_altas_precio.setText("");
 		fld_altas_precio.setEditable(false);
 		btn_altas_verify.setEnabled(false);
@@ -1311,6 +1474,8 @@ public class SCI extends JFrame{
 		txt_altas_desc.setEditable(false);
 		spnr_altas_cant.setValue(0);
 		spnr_altas_cant.setEnabled(false);
+		sel_altas_proveedor.setEditable(false);
+		sel_altas_proveedor.setEnabled(false);
 		fld_altas_precio.setText("");
 		fld_altas_precio.setEditable(false);
 //		btn_altas_verify.setEnabled(false);
@@ -1333,6 +1498,8 @@ public class SCI extends JFrame{
 		fld_cambios_exist.setEditable(false);
 		fld_cambios_precio.setText("");
 		fld_cambios_precio.setEditable(false);
+		sel_cambios_proveedor.setEditable(false);
+		sel_cambios_proveedor.setEnabled(false);
 		spnr_cambios_cant.setValue(0);
 		spnr_cambios_cant.setEnabled(false);
 		btn_cambios_apply.setEnabled(false);
@@ -1369,6 +1536,7 @@ public class SCI extends JFrame{
 		fld_cambios_precio.setEditable(false);
 		spnr_cambios_cant.setValue(0);
 		spnr_cambios_cant.setEnabled(false);
+		sel_cambios_proveedor.setEditable(false);
 		btn_cambios_apply.setEnabled(false);
 		lbl_cambios_info_messages.setText("");
 	}

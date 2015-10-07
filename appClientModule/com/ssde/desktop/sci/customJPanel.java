@@ -9,6 +9,10 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 public class customJPanel extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 4083958702989733656L;
 	private Image bg; 
 	
 	public customJPanel() {
